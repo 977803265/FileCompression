@@ -4,7 +4,12 @@
 #include<string.h>
 #include<algorithm>
 
+<<<<<<< HEAD
 typedef  long long LongType;
+=======
+typedef unsigned long long LongType;
+typedef unsigned int    uint;
+>>>>>>> origin/master
 
 struct FileInfo{
 	char _ch;
@@ -103,12 +108,22 @@ public:
 		FILE *fInConfig = fopen(configfile.c_str(),"wb");
 		assert(fInConfig);
 
+<<<<<<< HEAD
 		char str[32];
 		itoa((int)(chSize >> 32), str, 10);
 		fputs(str, fInConfig);
 		fputc('\n', fInConfig);
 		itoa((int)chSize, str, 10);
 		fputs(str, fInConfig);
+=======
+		char strHigh[32];
+		char strLow[32];
+		itoa(chSize >> 32, strHigh, 10);
+		fputs(strHigh, fInConfig);
+		fputc('\n', fInConfig);
+		itoa((uint)chSize, strLow, 10);
+		fputs(strLow, fInConfig);
+>>>>>>> origin/master
 		fputc(' \n', fInConfig);
 
 		for(size_t i = 0;i < 256;++i)
@@ -118,11 +133,19 @@ public:
 			{
 				Inconfig += _infos[i]._ch;
 				Inconfig += ',';
+<<<<<<< HEAD
 				Inconfig += itoa((int)(_infos[i]._count >> 32), str, 10);
 				Inconfig += '\n';
 				fputs(Inconfig.c_str(), fInConfig);
 				Inconfig.clear();
 				Inconfig += itoa((int)_infos[i]._count, str, 10);
+=======
+				Inconfig += itoa(_infos[i]._count >> 32, strHigh, 10);
+				Inconfig += '\n';
+				fputs(Inconfig.c_str(), fInConfig);
+				Inconfig.clear();
+				Inconfig += itoa((uint)_infos[i]._count, strLow, 10);
+>>>>>>> origin/master
 				Inconfig += '\n';
 				fputs(Inconfig.c_str(), fInConfig);
 			}
@@ -146,11 +169,15 @@ public:
 		string line;
 		LongType chSize = 0;
 		ReadLine(fOutConfig,line);
+<<<<<<< HEAD
 		chSize = (LongType)atoi(line.c_str());
 		chSize <<= 32;
 		line.clear();
 		ReadLine(fOutConfig, line);
 		chSize += (LongType)atoi(line.c_str());
+=======
+		chSize = atoi(line.c_str());
+>>>>>>> origin/master
 	  //  chSize << 32;
 	//	line.clear();
 	//	ReadLine(fOutConfig,line);
@@ -159,7 +186,11 @@ public:
 
 		while(ReadLine(fOutConfig,line))
 		{
+<<<<<<< HEAD
 			unsigned char ch = 0;
+=======
+			char ch;
+>>>>>>> origin/master
 			if(!line.empty())
 			{
 				ch = line[0];
@@ -169,6 +200,7 @@ public:
 			}
 			else
 			{
+<<<<<<< HEAD
 				line = '\n';
 				ReadLine(fOutConfig, line);
 				ch = line[0];
@@ -179,6 +211,15 @@ public:
 			ReadLine(fOutConfig, line);
 			_infos[ch]._count +=(int) atoi(line.substr().c_str());
 			line.clear();
+=======
+				ch = '\n';
+				ReadLine(fOutConfig, line);
+				_infos[ch]._count = (LongType)atoi(line.substr(1).c_str());
+				line.clear();
+			}
+			ReadLine(fOutConfig, line);
+			_infos[ch]._count +=(uint) atoi(line.substr().c_str());
+>>>>>>> origin/master
 		}
 
 		//¹¹ÔìhuffmanÊ÷
