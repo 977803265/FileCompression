@@ -4,7 +4,8 @@
 #include<string.h>
 #include<algorithm>
 
-typedef long LongType;
+typedef  long long LongType;
+
 struct FileInfo{
 	char _ch;
 	LongType _count;
@@ -50,7 +51,7 @@ public:
 		FILE *fOut = fopen(filename,"rb");
 		assert(fOut);
 		char ch = fgetc(fOut);
-		long long chSize = 0;
+		LongType chSize = 0;
 		while (!feof(fOut))
 		{
 			++chSize;
@@ -71,31 +72,30 @@ public:
 		fseek(fOut,0,SEEK_SET);
 		ch = fgetc(fOut);
 		int index = 0;
-		unsigned char Inch = 0;
-		//while(ch != EOF)
+		unsigned char setBit = 0;
 		while (!feof(fOut))
 		{
 			string &code = _infos[(unsigned char)ch]._code;
 			for(int i = 0;i < code.size();++i)
 			{
-				Inch <<= 1;
+				setBit <<= 1;
 				if(code[i] == '1')
 				{
-					Inch |= 1;
+					setBit |= 1;
 				}
 				if(++index == 8)
 				{
-					fputc(Inch,fInCompress);
+					fputc(setBit,fInCompress);
 					index = 0;
-					Inch = 0;
+					setBit = 0;
 				}
 			}
 			ch = fgetc(fOut);
 		}
 		if(index != 0)
 		{
-			Inch <<= (8-index);
-			fputc(Inch,fInCompress);
+			setBit <<= (8-index);
+			fputc(setBit,fInCompress);
 		}
 		//配置文件
 		string configfile = filename;
@@ -103,14 +103,13 @@ public:
 		FILE *fInConfig = fopen(configfile.c_str(),"wb");
 		assert(fInConfig);
 
-		char str[128];
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       		itoa(chSize>>32,str,10);
-		fputs(str,fInConfig);
-		fputc('\n',fInConfig);
-
-		itoa(chSize,str,10);
-		fputs(str,fInConfig);
-		fputc('\n',fInConfig);
+		char str[32];
+		itoa((int)(chSize >> 32), str, 10);
+		fputs(str, fInConfig);
+		fputc('\n', fInConfig);
+		itoa((int)chSize, str, 10);
+		fputs(str, fInConfig);
+		fputc(' \n', fInConfig);
 
 		for(size_t i = 0;i < 256;++i)
 		{
@@ -119,56 +118,76 @@ public:
 			{
 				Inconfig += _infos[i]._ch;
 				Inconfig += ',';
-				Inconfig += itoa(_infos[i]._count,str,10);
+				Inconfig += itoa((int)(_infos[i]._count >> 32), str, 10);
 				Inconfig += '\n';
+				fputs(Inconfig.c_str(), fInConfig);
+				Inconfig.clear();
+				Inconfig += itoa((int)_infos[i]._count, str, 10);
+				Inconfig += '\n';
+				fputs(Inconfig.c_str(), fInConfig);
 			}
-			fputs(Inconfig.c_str(),fInConfig);
+		//	fputs(Inconfig.c_str(),fInConfig);
 		}
 		fclose(fOut);
 		fclose(fInCompress);
 		fclose(fInConfig);
 		return true;
 	}
+
 	bool UnCompress(const char *filename)
 	{
-		//1.读取配置文件信息
+		//读取配置文件
+		
 		string configfile = filename;
 		configfile += ".cfig";
 		FILE *fOutConfig = fopen(configfile.c_str(),"rb");
 		assert(fOutConfig);
 
 		string line;
-		long long chSize = 0;
+		LongType chSize = 0;
 		ReadLine(fOutConfig,line);
-		chSize = atoi(line.c_str());
-		chSize << 32;
+		chSize = (LongType)atoi(line.c_str());
+		chSize <<= 32;
 		line.clear();
-
-		ReadLine(fOutConfig,line);
-		chSize += atoi(line.c_str());
+		ReadLine(fOutConfig, line);
+		chSize += (LongType)atoi(line.c_str());
+	  //  chSize << 32;
+	//	line.clear();
+	//	ReadLine(fOutConfig,line);
+	//	chSize += atoi(line.c_str());
 		line.clear();
 
 		while(ReadLine(fOutConfig,line))
 		{
+			unsigned char ch = 0;
 			if(!line.empty())
 			{
-				unsigned char ch = line[0];
-				_infos[ch]._count = atoi(line.substr(2).c_str());
+				ch = line[0];
+				_infos[ch]._count = (LongType)atoi(line.substr(2).c_str());
+				_infos[ch]._count <<= 32;
 				line.clear();
 			}
 			else
 			{
 				line = '\n';
+				ReadLine(fOutConfig, line);
+				ch = line[0];
+				_infos[ch]._count = (LongType)atoi(line.substr(2).c_str());
+				_infos[ch]._count <<= 32;
+				line.clear();
 			}
+			ReadLine(fOutConfig, line);
+			_infos[ch]._count +=(int) atoi(line.substr().c_str());
+			line.clear();
 		}
 
-		//2.构造huffman树
+		//构造huffman树
 		HuffmanTree<FileInfo,NodeCompare<FileInfo>> t;
-		FileInfo invalid;                //非法值的_count是0
+		FileInfo invalid;                //_count是0
 		t.Create(_infos,256,invalid);
 		_GenerateHuffmanCode(t.GetRoot());
 
-		//3.解压缩
+		//解压缩
 		string compressfile = filename;   //读压缩文件
 		compressfile += ".huffman";
 		FILE *fOutCompress = fopen(compressfile.c_str(),"rb");
@@ -242,7 +261,7 @@ protected:
 			str += ch;
 			ch = fgetc(fOut);
 		}
-		return false;
+		return true;
 	}
 private:
 	FileInfo _infos[256];
