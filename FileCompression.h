@@ -1,20 +1,18 @@
+//在写这份代码的时候，让我明白一件事情，永远没有最好的，永远不要对自己满足
+//加油，coder
 #pragma once 
 #pragma warning(disable:4996)
 #include"HuffmanTree.h"
 #include<string.h>
 #include<algorithm>
 
-<<<<<<< HEAD
 typedef  long long LongType;
-=======
-typedef unsigned long long LongType;
-typedef unsigned int    uint;
->>>>>>> origin/master
 
+//配置文件结构
 struct FileInfo{
-	char _ch;
-	LongType _count;
-	string _code;
+	char _ch;       //字符
+	LongType _count; //字符在文件中出现次数（权值）
+	string _code;    //对应哈夫曼码
 
 	FileInfo(const unsigned char ch = 0)
 		:_ch(ch)
@@ -40,6 +38,7 @@ struct FileInfo{
 
 };
 
+//文件压缩类
 class FileCompress{
 public:
 	FileCompress()
@@ -49,36 +48,66 @@ public:
 			_infos[i]._ch = i;
 		}
 	}
-
-	bool Compress(const char *filename)
+	//文件压缩
+	bool Compress(const char *inFileRoute, const char *outFileRoute, const char *fileName)
 	{
-		assert(filename);
-		FILE *fOut = fopen(filename,"rb");
-		assert(fOut);
-		char ch = fgetc(fOut);
-		LongType chSize = 0;
-		while (!feof(fOut))
+		//打开文件
+		assert(inFileRoute);
+		assert(outFileRoute);
+		assert(fileName);
+		//处理文件名
+		string inFile = inFileRoute;
+		inFile += fileName;
+		FILE *inputFile = fopen(inFile.c_str(), "rb");
+		assert(inputFile);
+		//统计字节总数
+		char ch;
+		LongType chSize = 0;//字节总数
+		fread(&ch, 1, 1, inputFile);
+		while (!feof(inputFile))
 		{
 			++chSize;
 			_infos[(unsigned char)ch]._count++;
-			ch = fgetc(fOut);
+			fread(&ch, 1, 1, inputFile);
 		}
+
+		//哈夫曼树建立
 		HuffmanTree<FileInfo,NodeCompare<FileInfo>> t;
-		FileInfo invalid;                //非法值
-		t.Create(_infos,256,invalid);
+		FileInfo invalid;              //非法值（字符没出现）
+		short figColCount=t.Create(_infos, 256, invalid);
 		_GenerateHuffmanCode(t.GetRoot());
 
-	    //压缩文件
-		string compressfile = filename;
-		compressfile += ".huffman";
-		FILE *fInCompress = fopen(compressfile.c_str(),"wb");
+		//配置文件
+		string compressFileName = outFileRoute;
+		compressFileName += fileName;
+		compressFileName += ".huffman";
+		FILE *fInCompress = fopen(compressFileName.c_str(), "wb");
 		assert(fInCompress);
+		
+        //配置文件行数
+		fwrite(&figColCount,2,1, fInCompress);
+		//总字节数
+		fwrite(&chSize, 8, 1, fInCompress);
 
-		fseek(fOut,0,SEEK_SET);
-		ch = fgetc(fOut);
+
+		for (size_t i = 0; i < 256; ++i)
+		{
+			if (_infos[i]._count > 0)
+			{
+				//字符
+				fwrite(&i, 1, 1, fInCompress);
+				//字符计数
+				fwrite(&_infos[i]._count, 8, 1, fInCompress);
+
+			}
+		}
+
+	    //压缩文件
+		fseek(inputFile, 0, SEEK_SET);
+		fread(&ch, 1, 1, inputFile);
 		int index = 0;
 		unsigned char setBit = 0;
-		while (!feof(fOut))
+		while (!feof(inputFile))
 		{
 			string &code = _infos[(unsigned char)ch]._code;
 			for(int i = 0;i < code.size();++i)
@@ -90,181 +119,103 @@ public:
 				}
 				if(++index == 8)
 				{
-					fputc(setBit,fInCompress);
+					fwrite(&setBit, 1, 1, fInCompress);
 					index = 0;
 					setBit = 0;
 				}
 			}
-			ch = fgetc(fOut);
+			fread(&ch, 1, 1, inputFile);
 		}
 		if(index != 0)
 		{
 			setBit <<= (8-index);
-			fputc(setBit,fInCompress);
+			fwrite(&setBit, 1, 1, fInCompress);
 		}
-		//配置文件
-		string configfile = filename;
-		configfile += ".cfig";
-		FILE *fInConfig = fopen(configfile.c_str(),"wb");
-		assert(fInConfig);
-
-<<<<<<< HEAD
-		char str[32];
-		itoa((int)(chSize >> 32), str, 10);
-		fputs(str, fInConfig);
-		fputc('\n', fInConfig);
-		itoa((int)chSize, str, 10);
-		fputs(str, fInConfig);
-=======
-		char strHigh[32];
-		char strLow[32];
-		itoa(chSize >> 32, strHigh, 10);
-		fputs(strHigh, fInConfig);
-		fputc('\n', fInConfig);
-		itoa((uint)chSize, strLow, 10);
-		fputs(strLow, fInConfig);
->>>>>>> origin/master
-		fputc(' \n', fInConfig);
-
-		for(size_t i = 0;i < 256;++i)
-		{
-			string Inconfig;
-			if(_infos[i]._count > 0)
-			{
-				Inconfig += _infos[i]._ch;
-				Inconfig += ',';
-<<<<<<< HEAD
-				Inconfig += itoa((int)(_infos[i]._count >> 32), str, 10);
-				Inconfig += '\n';
-				fputs(Inconfig.c_str(), fInConfig);
-				Inconfig.clear();
-				Inconfig += itoa((int)_infos[i]._count, str, 10);
-=======
-				Inconfig += itoa(_infos[i]._count >> 32, strHigh, 10);
-				Inconfig += '\n';
-				fputs(Inconfig.c_str(), fInConfig);
-				Inconfig.clear();
-				Inconfig += itoa((uint)_infos[i]._count, strLow, 10);
->>>>>>> origin/master
-				Inconfig += '\n';
-				fputs(Inconfig.c_str(), fInConfig);
-			}
-		//	fputs(Inconfig.c_str(),fInConfig);
-		}
-		fclose(fOut);
+		fclose(inputFile);
 		fclose(fInCompress);
-		fclose(fInConfig);
 		return true;
 	}
 
-	bool UnCompress(const char *filename)
+	bool UnCompress(const char *inFileRoute, const char *outFileRoute, const char *fileName)
 	{
-		//读取配置文件
-		
-		string configfile = filename;
-		configfile += ".cfig";
-		FILE *fOutConfig = fopen(configfile.c_str(),"rb");
-		assert(fOutConfig);
-
-		string line;
-		LongType chSize = 0;
-		ReadLine(fOutConfig,line);
-<<<<<<< HEAD
-		chSize = (LongType)atoi(line.c_str());
-		chSize <<= 32;
-		line.clear();
-		ReadLine(fOutConfig, line);
-		chSize += (LongType)atoi(line.c_str());
-=======
-		chSize = atoi(line.c_str());
->>>>>>> origin/master
-	  //  chSize << 32;
-	//	line.clear();
-	//	ReadLine(fOutConfig,line);
-	//	chSize += atoi(line.c_str());
-		line.clear();
-
-		while(ReadLine(fOutConfig,line))
+		//判断文件是否可以解压
+		string compressFileName = inFileRoute;
+		compressFileName += fileName;
+		if (compressFileName.find(".huffman") == compressFileName.npos)
 		{
-<<<<<<< HEAD
-			unsigned char ch = 0;
-=======
-			char ch;
->>>>>>> origin/master
-			if(!line.empty())
-			{
-				ch = line[0];
-				_infos[ch]._count = (LongType)atoi(line.substr(2).c_str());
-				_infos[ch]._count <<= 32;
-				line.clear();
-			}
-			else
-			{
-<<<<<<< HEAD
-				line = '\n';
-				ReadLine(fOutConfig, line);
-				ch = line[0];
-				_infos[ch]._count = (LongType)atoi(line.substr(2).c_str());
-				_infos[ch]._count <<= 32;
-				line.clear();
-			}
-			ReadLine(fOutConfig, line);
-			_infos[ch]._count +=(int) atoi(line.substr().c_str());
-			line.clear();
-=======
-				ch = '\n';
-				ReadLine(fOutConfig, line);
-				_infos[ch]._count = (LongType)atoi(line.substr(1).c_str());
-				line.clear();
-			}
-			ReadLine(fOutConfig, line);
-			_infos[ch]._count +=(uint) atoi(line.substr().c_str());
->>>>>>> origin/master
+			cout << "非本程序压缩文件，不能解压" << endl;
+			return false;
+		}
+		//打开待解压文件
+		FILE *compressFile = fopen(compressFileName.c_str(), "rb");
+		assert(compressFile);
+
+		
+		LongType chSize = 0;
+		short figColCount = 0;
+		//读取配置文件行数
+		fread(&figColCount, 2, 1, compressFile);
+		//读取总字节数
+		fread(&chSize, 8, 1, compressFile);
+
+		char ch;
+		//读取配置文件
+		while (figColCount)
+		{
+			fread(&ch, 1, 1, compressFile);
+			fread(&_infos[(unsigned char)ch]._count, 8, 1, compressFile);
+			--figColCount;
 		}
 
 		//构造huffman树
 		HuffmanTree<FileInfo,NodeCompare<FileInfo>> t;
-		FileInfo invalid;                //_count是0
+		FileInfo invalid;                
 		t.Create(_infos,256,invalid);
 		_GenerateHuffmanCode(t.GetRoot());
 
-		//解压缩
-		string compressfile = filename;   //读压缩文件
-		compressfile += ".huffman";
-		FILE *fOutCompress = fopen(compressfile.c_str(),"rb");
-		assert(fOutCompress);
+		//fseek(compressFile, 0, SEEK_SET);
+		//写解压缩文件
+		string outputFileName = outFileRoute;
+		outputFileName += fileName;
+		outputFileName.erase(outputFileName.find(".huffman"), 8);
+		FILE* outputFile = fopen(outputFileName.c_str(), "r");
+		//去除后缀并且判断输出是否重名
+		if (outputFile)
+		{
+			outputFileName.insert(outputFileName.rfind('.'),1,'1');
+		}
+		outputFile = fopen(outputFileName.c_str(), "wb");
+		assert(outputFile);
 
-		string uncompressfile = filename;    //写解压缩文件
-		uncompressfile += ".uncompress";
-		FILE *fInUncompress = fopen(uncompressfile.c_str(),"wb");
-		assert(fInUncompress);
-
-		char ch = fgetc(fOutCompress);
+		//读取文件正文
+		fread(&ch, 1, 1, compressFile);
 		HuffmanTreeNode<FileInfo> *cur = t.GetRoot();
 		int pos = 8;
-		while (!feof(fInUncompress))
+		while (!feof(compressFile))
 		{
-			if(cur->_left == NULL && cur->_right == NULL)
+			if (cur->_left == NULL && cur->_right == NULL)
 			{
-				fputc(cur->_weight._ch,fInUncompress);
+				//fputc(cur->_weight._ch, outputFile);
+				fwrite(&cur->_weight._ch, 1, 1, outputFile);
 				cur = t.GetRoot();
-				if(--chSize == 0)
+				if (--chSize == 0)
 					break;
 			}
 			--pos;
-			if(ch & (1<<pos))
+			if (ch & (1 << pos))
 				cur = cur->_right;
 			else
 				cur = cur->_left;
-			if(pos == 0)
+			if (pos == 0)
 			{
-				ch = fgetc(fOutCompress);
+				//ch = fgetc(compressFile);
+				fread(&ch, 1, 1, compressFile);
 				pos = 8;
 			}
-		}
-		fclose(fOutConfig);
-		fclose(fOutCompress);
-		fclose(fInUncompress);
+		} 
+
+		fclose(outputFile);
+		fclose(compressFile);
 		return true;
 	}
 protected:
@@ -290,19 +241,6 @@ protected:
 			}
 			reverse(code.begin(),code.end());
 		}
-	}
-	
-	bool ReadLine(FILE *fOut,string &str)
-	{
-		char ch =fgetc(fOut);
-		if(ch == EOF)
-			return false;
-		while(ch != EOF && ch != '\n')
-		{
-			str += ch;
-			ch = fgetc(fOut);
-		}
-		return true;
 	}
 private:
 	FileInfo _infos[256];

@@ -35,9 +35,10 @@ public:
 		:_root(NULL)
 	{}
 
-	void Create(const T *a,size_t size,T invalid)
+	int Create(const T *a,size_t size,T invalid)
 	{
 		assert(a);
+		int nodeCount = 0;
 		Heap<Node*,NodeCompare<T>> minHeap;
 		for(size_t i = 0;i < size;i++)
 		{
@@ -45,6 +46,7 @@ public:
 			{
 				Node *newnode = new Node(a[i]);
 			    minHeap.push(newnode);
+				nodeCount++;
 			}
 		}
 		while(minHeap.size() >= 2)
@@ -64,6 +66,7 @@ public:
 		}
 		_root = minHeap.top();
 		minHeap.pop();
+		return nodeCount;
 	}
 	Node *GetRoot()
 	{

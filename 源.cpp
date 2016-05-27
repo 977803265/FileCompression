@@ -9,12 +9,18 @@ using namespace std;
 void Compress()
 {
 	getchar();
-	char inputFile[100] = { 0 };
-	cout << "请输入要压缩的文件路径以及文件名称" << endl << ">>";
-	gets(inputFile);
+	char inputRoute[100] = { 0 };
+	char outputRoute[100] = { 0 };
+	char inputFileName[20] = { 0 };
+	cout << "请输入要压缩的文件路径" << endl << ">>";
+	gets(inputRoute);
+	cout << "请输入要压缩的文件名" << endl << ">>";
+	gets(inputFileName);
+	cout << "请输入压缩后文件放置路径" << endl << ">>";
+	gets(outputRoute);
 	cout << "压缩中......" << endl;
 	FileCompress input;
-	input.Compress(inputFile);
+	input.Compress(inputRoute, outputRoute, inputFileName);
 	cout << "压缩完成！！！！" << endl;
 }
 
@@ -22,12 +28,18 @@ void Compress()
 void UnCompress()
 {
 	getchar();
-	char outputFile[100] = { 0 };
-	cout << "请输入要解压缩的文件路径以及文件名称" << endl << ">>";
-	gets(outputFile);
+	char inputRoute[100] = { 0 };
+	char outputRoute[100] = { 0 };
+	char inputFileName[20] = { 0 };
+	cout << "请输入要解压缩的文件路径" << endl << ">>";
+	gets(inputRoute);
+	cout << "请输入要解压缩的文件名" << endl << ">>";
+	gets(inputFileName);
+	cout << "请输入解压缩后文件输出路径" << endl << ">>";
+	gets(outputRoute);
 	cout << "解压缩中......" << endl;
 	FileCompress output;
-	output.UnCompress(outputFile);
+	if (output.UnCompress(inputRoute, outputRoute, inputFileName))
 	cout << "解压缩完成！！！！" << endl;
 }
 
